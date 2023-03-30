@@ -95,7 +95,7 @@ def printAccidentals(root):
 			print(root, " has ", acc, " sharp. It is", sharps)
 		else:
 			print(root, " has ", acc, " sharps. They are", sharps)
-
+			
 
 def printScale(root, steps):
 	ind = allNotes.index(root)
@@ -114,6 +114,7 @@ def printScale(root, steps):
 		ind += steps[x%(len(steps))]
 		
 	print()
+	
 	
 def printMenu():
 	print("-----Scales-----")
@@ -139,6 +140,7 @@ def printMenu():
 	print("sus4 - Sus4")
 	print("aug - Augmented")
 	print()
+	
 	
 def chooseType(mod):
 
@@ -192,6 +194,7 @@ def chooseType(mod):
 			return aug
 		case _:
 			return -1
+			
 
 def chooseMode():
 	while True:
@@ -205,6 +208,7 @@ def chooseMode():
 		else:
 			print("That is not a valid mode. Please enter a valid mode.")
 			print()
+			
 
 def singleChordMode():
 	while True:
@@ -226,6 +230,7 @@ def singleChordMode():
 		# printAccidentals(root)
 		printScale(root, type)
 		print()
+		
 
 def progressionMode():
 	while True:
@@ -262,7 +267,6 @@ def progressionMode():
 		print(temp[0]+temp[1])
 		printScale(temp[0],temp[2])
 		print()
-
 		
 
 def drawStaff(pos):
@@ -281,15 +285,12 @@ def drawStaff(pos):
 
 	# right side vertical line
 	pygame.draw.line(SCREEN, BLACK, (RIGHTX,TOPY), (RIGHTX,BOTTOMY))
-
-	# for i in range(40):
-	# 	x = LEFTX + (RIGHTX-LEFTX)/40*i
-	# 	pygame.draw.line(SCREEN, BLACK, (x,TOPY), (x,BOTTOMY))
 		
 	# horizontal staff lines
 	for i in range(5):
 		y = TOPY+SPACING*i
 		pygame.draw.line(SCREEN, BLACK, (LEFTX,y), (RIGHTX,y))
+		
 
 def printNote(staffPos, noteName, oct, notePosX):
 	# calculate x position
@@ -351,6 +352,7 @@ def printNote(staffPos, noteName, oct, notePosX):
 			SCREEN.blit(flat, (x,y))
 	except:
 		pass
+		
 	
 # mode = chooseMode()
 mode = 1
