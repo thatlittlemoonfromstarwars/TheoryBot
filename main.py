@@ -1,11 +1,13 @@
 import pygame, sys
 from pygame.locals import QUIT
+from pygame import gfxdraw
 
 # setup for pygame
 pygame.init()
 WIDTH = 1000
 HEIGHT = 700
 WINDOW_SIZE = (WIDTH, HEIGHT)
+TREBLE_SIZE = (70,70)
 BLACK = (0,0,0)
 
 SCREEN = pygame.display.set_mode(WINDOW_SIZE)
@@ -265,7 +267,6 @@ def progressionMode():
 
 def drawStaff(pos):
 	# draw treble clef
-	TREBLE_SIZE = (70,70)
 	trebleClef = pygame.image.load("treble clef.png")
 	trebleClef = pygame.transform.smoothscale(trebleClef, TREBLE_SIZE)
 	SCREEN.blit(trebleClef, pos)
@@ -280,11 +281,76 @@ def drawStaff(pos):
 
 	# right side vertical line
 	pygame.draw.line(SCREEN, BLACK, (RIGHTX,TOPY), (RIGHTX,BOTTOMY))
-	
+
+	# for i in range(40):
+	# 	x = LEFTX + (RIGHTX-LEFTX)/40*i
+	# 	pygame.draw.line(SCREEN, BLACK, (x,TOPY), (x,BOTTOMY))
+		
 	# horizontal staff lines
 	for i in range(5):
 		y = TOPY+SPACING*i
-		pygame.draw.aaline(SCREEN, BLACK, (LEFTX,y), (RIGHTX,y))
+		pygame.draw.line(SCREEN, BLACK, (LEFTX,y), (RIGHTX,y))
+
+def printNote(staffPos, noteName, oct, notePosX):
+	# calculate x position
+	xPos = (staffPos[0]+10) + (WIDTH-(staffPos[0]+10)*2)/90 + (WIDTH-(staffPos[0]+10)*2)/30*(notePosX+2)
+	xPos = int(xPos)
+	
+	# calculate y position
+	NOTE_SPACING = (TREBLE_SIZE[1]-23)/8
+
+	middleCY = staffPos[1] + NOTE_SPACING*11
+
+	match noteName[0]:
+		case "C":
+			mult = 0
+		case "D":
+			mult = 1
+		case "E":
+			mult = 2
+		case "F":
+			mult = 3
+		case "G":
+			mult = 4
+		case "A":
+			mult = 5
+		case "B":
+			mult = 6
+		case _:
+			mult = -1
+		
+	yPos = int(middleCY - NOTE_SPACING*(mult + (oct-1)*8))
+
+	# draw line through note if it qualifies
+	if yPos > (staffPos[1] + NOTE_SPACING*10) or yPos < (staffPos[1] - NOTE_SPACING):
+		pygame.draw.line(SCREEN, BLACK, (xPos-9,yPos), (xPos+9,yPos))
+	
+	# draw note
+	gfxdraw.aacircle(SCREEN, xPos, yPos, 5, BLACK)
+	gfxdraw.filled_circle(SCREEN, xPos, yPos, 5, BLACK)
+
+	# draw accidental
+	ACC_OFFSET = 14
+	SHARP_SIZE = (40,40)
+	FLAT_SIZE = (8,18)
+	try:
+		if noteName[1] == '#':
+			
+			sharp = pygame.image.load("sharp.png")
+			sharp = pygame.transform.smoothscale(sharp, SHARP_SIZE)
+			x = int(xPos + ACC_OFFSET - SHARP_SIZE[0]/2)
+			y = int(yPos-SHARP_SIZE[1]/2)
+			SCREEN.blit(sharp, (x, y))
+		
+		elif noteName[1] == 'b':
+			
+			flat = pygame.image.load("flat.png")
+			flat = pygame.transform.smoothscale(flat, FLAT_SIZE)
+			x = int(xPos + ACC_OFFSET - FLAT_SIZE[0]/2)
+			y = int(yPos-FLAT_SIZE[1]/2) - 3
+			SCREEN.blit(flat, (x,y))
+	except:
+		pass
 	
 # mode = chooseMode()
 mode = 1
@@ -302,8 +368,9 @@ while True:
 
 	
 	drawStaff((10,20))
-
-	drawStaff((10,300))
+	printNote((10,20), "C#", 1, 0)
+	printNote((10,20), "Bb", 1, 1)
+	printNote((10,20), "D", 1, 2)
 		
 	pygame.display.update()
 		
