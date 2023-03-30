@@ -1,4 +1,15 @@
-import pygame
+import pygame, sys
+from pygame.locals import QUIT
+
+# setup for pygame
+pygame.init()
+WIDTH = 1000
+HEIGHT = 700
+WINDOW_SIZE = (WIDTH, HEIGHT)
+BLACK = (0,0,0)
+
+SCREEN = pygame.display.set_mode(WINDOW_SIZE)
+# https://replit.com/talk/learn/Pygame-Tutorial/143782
 
 allNotes = ["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"]
 accidentals = [0,-5,2,-3,4,-1,6,1,-4,3,-2,5]
@@ -179,22 +190,22 @@ def chooseType(mod):
 			return aug
 		case _:
 			return -1
-	
 
-while(True):
-	# mode select
-	print("----Modes----")
-	print("1. Single Chord or Scale")
-	print("2. Chord progression")
-	mode = int(input("Choose a mode:"))
-	if mode == 1 or mode == 2:
-		break
-	else:
-		print("That is not a valid mode. Please enter a valid mode.")
-		print()
+def chooseMode():
+	while True:
+		# mode select
+		print("----Modes----")
+		print("1. Single Chord or Scale")
+		print("2. Chord progression")
+		mode = int(input("Choose a mode:"))
+		if mode == 1 or mode == 2:
+			return mode
+		else:
+			print("That is not a valid mode. Please enter a valid mode.")
+			print()
 
-while(True):
-	if mode == 1:
+def singleChordMode():
+	while True:
 		# single chord
 		userin = input("Enter scale or chord (type m to see option menu): ")
 		if userin[0] == "m" or userin[0] == "M":
@@ -213,42 +224,91 @@ while(True):
 		# printAccidentals(root)
 		printScale(root, type)
 		print()
-		
-	else:
-		# progression
-		while(True):
-			numChords = input("Enter number of chords: ") # can be changed later
-			try:
-				numChords = int(numChords)
-				break
-			except:
-				print("Please enter an integer.")
-		
-		chords = []
-		x = 0
-		while(x < numChords):
-			userin = input("Enter chord " + str(x+1) + " (type m to see option menu): ")
-			if userin[0] == "m" or userin[0] == "M":
-				printMenu()
-				continue
-			root, mod = findRoot(userin)
-		
-			# if entrance format is incorrect, reenter input
-			if root == -1:
-				continue
-		
-			type = chooseType(mod)
-			if type == -1:
-				print("That is not a valid option. Please try again (type m to see option menu).")
-				continue
 
-			tempChord = [root,mod,type]
-			chords.append(tempChord)
-			x += 1
+def progressionMode():
+	while True:
+		numChords = input("Enter number of chords: ") # can be changed later
+		try:
+			numChords = int(numChords)
+			break
+		except:
+			print("Please enter an integer.")
+	
+	chords = []
+	x = 0
+	while x < numChords:
+		userin = input("Enter chord " + str(x+1) + " (type m to see option menu): ")
+		if userin[0] == "m" or userin[0] == "M":
+			printMenu()
+			continue
+		root, mod = findRoot(userin)
+	
+		# if entrance format is incorrect, reenter input
+		if root == -1:
+			continue
+	
+		type = chooseType(mod)
+		if type == -1:
+			print("That is not a valid option. Please try again (type m to see option menu).")
+			continue
 
-		for temp in chords:
-			print(temp[0]+temp[1])
-			printScale(temp[0],temp[2])
-			print()
+		tempChord = [root,mod,type]
+		chords.append(tempChord)
+		x += 1
+
+	for temp in chords:
+		print(temp[0]+temp[1])
+		printScale(temp[0],temp[2])
+		print()
+
+		
+
+def drawStaff(pos):
+	# draw treble clef
+	TREBLE_SIZE = (70,70)
+	trebleClef = pygame.image.load("treble clef.png")
+	trebleClef = pygame.transform.smoothscale(trebleClef, TREBLE_SIZE)
+	SCREEN.blit(trebleClef, pos)
+
+	LEFTX = pos[0]+10
+	RIGHTX = WIDTH-(pos[0]+10)
+	TOPY = pos[1]+5
+	BOTTOMY = pos[1]+TREBLE_SIZE[1]-17
+	SPACING = (BOTTOMY-TOPY)/4
+	# left side vertical line
+	pygame.draw.line(SCREEN, BLACK, (LEFTX,TOPY), (LEFTX,BOTTOMY))
+
+	# right side vertical line
+	pygame.draw.line(SCREEN, BLACK, (RIGHTX,TOPY), (RIGHTX,BOTTOMY))
+	
+	# horizontal staff lines
+	for i in range(5):
+		y = TOPY+SPACING*i
+		pygame.draw.aaline(SCREEN, BLACK, (LEFTX,y), (RIGHTX,y))
+	
+# mode = chooseMode()
+mode = 1
+# Program Start
+while True:
+	for event in pygame.event.get():
+		if event.type == QUIT:
+			pygame.quit()
+			sys.exit()
+
+		if event.type == pygame.MOUSEBUTTONUP:
+			print(pygame.mouse.get_pos())
+			
+	SCREEN.fill("white")
+
+	
+	drawStaff((10,20))
+
+	drawStaff((10,300))
+		
+	pygame.display.update()
 		
 		
+	# if mode == 1:
+	# 	singleChordMode()
+	# else:
+	# 	progressionMode()
