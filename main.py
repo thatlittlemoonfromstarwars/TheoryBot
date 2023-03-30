@@ -1,3 +1,5 @@
+import pygame
+
 allNotes = ["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"]
 accidentals = [0,-5,2,-3,4,-1,6,1,-4,3,-2,5]
 orderOfSharps = ['F','C','G','D','A','E','B']
@@ -135,6 +137,8 @@ def chooseType(mod):
 		pass
 	
 	match mod:	
+		case "":
+			return maj
 		case "M":
 			return major
 		case "m":
@@ -176,23 +180,75 @@ def chooseType(mod):
 		case _:
 			return -1
 	
+
 while(True):
-	userin = input("Enter scale or chord (type m to see option menu): ")
-	if userin[0] == "m" or userin[0] == "M":
-		printMenu()
-		continue
-	root, mod = findRoot(userin)
+	# mode select
+	print("----Modes----")
+	print("1. Single Chord or Scale")
+	print("2. Chord progression")
+	mode = int(input("Choose a mode:"))
+	if mode == 1 or mode == 2:
+		break
+	else:
+		print("That is not a valid mode. Please enter a valid mode.")
+		print()
 
-	# if entrance format is incorrect, reenter input
-	if root == -1:
-		continue
+while(True):
+	if mode == 1:
+		# single chord
+		userin = input("Enter scale or chord (type m to see option menu): ")
+		if userin[0] == "m" or userin[0] == "M":
+			printMenu()
+			continue
+		root, mod = findRoot(userin)
+	
+		# if entrance format is incorrect, reenter input
+		if root == -1:
+			continue
+	
+		type = chooseType(mod)
+		if type == -1:
+			print("That is not a valid option. Please try again (type m to see option menu).")
+			continue
+		# printAccidentals(root)
+		printScale(root, type)
+		print()
+		
+	else:
+		# progression
+		while(True):
+			numChords = input("Enter number of chords: ") # can be changed later
+			try:
+				numChords = int(numChords)
+				break
+			except:
+				print("Please enter an integer.")
+		
+		chords = []
+		x = 0
+		while(x < numChords):
+			userin = input("Enter chord " + str(x+1) + " (type m to see option menu): ")
+			if userin[0] == "m" or userin[0] == "M":
+				printMenu()
+				continue
+			root, mod = findRoot(userin)
+		
+			# if entrance format is incorrect, reenter input
+			if root == -1:
+				continue
+		
+			type = chooseType(mod)
+			if type == -1:
+				print("That is not a valid option. Please try again (type m to see option menu).")
+				continue
 
-	type = chooseType(mod)
-	if type == -1:
-		print("That is not a valid option. Please try again (type m to see option menu).")
-		continue
-	# printAccidentals(root)
-	printScale(root, type)
+			tempChord = [root,mod,type]
+			chords.append(tempChord)
+			x += 1
 
-	print()
+		for temp in chords:
+			print(temp[0]+temp[1])
+			printScale(temp[0],temp[2])
+			print()
+		
 		
