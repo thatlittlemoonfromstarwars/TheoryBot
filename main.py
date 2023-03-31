@@ -2,15 +2,21 @@ import pygame, sys
 from pygame.locals import QUIT
 from pygame import gfxdraw
 
-# setup for pygame
-pygame.init()
+# global constants
 WIDTH = 1000
 HEIGHT = 700
 WINDOW_SIZE = (WIDTH, HEIGHT)
 TREBLE_SIZE = (70,70)
+NOTE_SPACING = (TREBLE_SIZE[1]-23)/8
+STAFF_POS = (10,20)
 BLACK = (0,0,0)
 
+# setup for pygame
+pygame.init()
+pygame.font.init()
+FONT = pygame.font.Font("Roboto/Roboto-Medium.ttf",15)
 SCREEN = pygame.display.set_mode(WINDOW_SIZE)
+pygame.display.set_caption('Theory Bot')
 # https://replit.com/talk/learn/Pygame-Tutorial/143782
 
 allNotes = ["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"]
@@ -46,6 +52,7 @@ aug = [4,4]
 
 
 def findRoot(userin):
+	# seperates user input into root note and modifier
 	if allNotes.count(userin[0]) == 0:
 		return -1, -1
 		
@@ -66,7 +73,7 @@ def findRoot(userin):
 
 
 def printAccidentals(root):
-	# to print accidentals
+	# to print accidentals in a scale
 	acc = accidentals[allNotes.index(root)]
 	if acc == 0:
 		print(root, " has no sharps or flats.")
@@ -98,6 +105,7 @@ def printAccidentals(root):
 			
 
 def printScale(root, steps):
+	# prints the note names of the notes in the scale
 	ind = allNotes.index(root)
 	if accidentals[ind] > 0:
 		sharpScale = True
@@ -113,8 +121,7 @@ def printScale(root, steps):
 
 		ind += steps[x%(len(steps))]
 		
-	print()
-	
+	pygame.display.update()
 	
 def printMenu():
 	print("-----Scales-----")
@@ -143,14 +150,8 @@ def printMenu():
 	
 	
 def chooseType(mod):
-
-	# remove space
-	try:
-		if mod[0] == ' ':
-			mod = mod[1:]
-	except:
-		pass
-	
+	# returns the corresponding step list, taking the
+	# modifier as input
 	match mod:	
 		case "":
 			return maj
@@ -197,8 +198,8 @@ def chooseType(mod):
 			
 
 def chooseMode():
+	# choose between single chord or chord progression
 	while True:
-		# mode select
 		print("----Modes----")
 		print("1. Single Chord or Scale")
 		print("2. Chord progression")
@@ -211,8 +212,8 @@ def chooseMode():
 			
 
 def singleChordMode():
+	# prints a single chord or scale
 	while True:
-		# single chord
 		userin = input("Enter scale or chord (type m to see option menu): ")
 		if userin[0] == "m" or userin[0] == "M":
 			printMenu()
@@ -222,17 +223,34 @@ def singleChordMode():
 		# if entrance format is incorrect, reenter input
 		if root == -1:
 			continue
-	
+
+		# remove space from mod
+		try:
+			if mod[0] == ' ':
+				mod = mod[1:]
+		except:
+			pass
+
+		# get step list
 		type = chooseType(mod)
 		if type == -1:
 			print("That is not a valid option. Please try again (type m to see option menu).")
 			continue
-		# printAccidentals(root)
+			
+		# reset screen
+		SCREEN.fill("white")
+		drawStaff(STAFF_POS)
+		pygame.display.update()
+		
+		# draw scale
+		drawScale(root, mod, type, 0)
 		printScale(root, type)
 		print()
 		
 
 def progressionMode():
+	# prints a chord progression
+	# select number of chords
 	while True:
 		numChords = input("Enter number of chords: ") # can be changed later
 		try:
@@ -240,9 +258,16 @@ def progressionMode():
 			break
 		except:
 			print("Please enter an integer.")
+
+	# reset screen
+	SCREEN.fill("white")
+	drawStaff(STAFF_POS)
+	pygame.display.update()
 	
 	chords = []
 	x = 0
+	
+	# get chord progression from user
 	while x < numChords:
 		userin = input("Enter chord " + str(x+1) + " (type m to see option menu): ")
 		if userin[0] == "m" or userin[0] == "M":
@@ -253,53 +278,69 @@ def progressionMode():
 		# if entrance format is incorrect, reenter input
 		if root == -1:
 			continue
-	
+			
+		# remove space from mod
+		try:
+			if mod[0] == ' ':
+				mod = mod[1:]
+		except:
+			pass
+
+		# get step list
 		type = chooseType(mod)
 		if type == -1:
 			print("That is not a valid option. Please try again (type m to see option menu).")
 			continue
 
+		# add chord to chord list
 		tempChord = [root,mod,type]
 		chords.append(tempChord)
 		x += 1
 
+	# print chord list
+	notePos = 0
 	for temp in chords:
 		print(temp[0]+temp[1])
 		printScale(temp[0],temp[2])
+		notePos = drawScale(temp[0],temp[1],temp[2], notePos)
 		print()
 		
 
 def drawStaff(pos):
-	# draw treble clef
-	trebleClef = pygame.image.load("treble clef.png")
-	trebleClef = pygame.transform.smoothscale(trebleClef, TREBLE_SIZE)
-	SCREEN.blit(trebleClef, pos)
-
+	# draws the staff
+	# staff dimensions
 	LEFTX = pos[0]+10
 	RIGHTX = WIDTH-(pos[0]+10)
 	TOPY = pos[1]+5
 	BOTTOMY = pos[1]+TREBLE_SIZE[1]-17
-	SPACING = (BOTTOMY-TOPY)/4
-	# left side vertical line
+	STAFF_SPACING = (BOTTOMY-TOPY)/4
+
+	# draw treble clef
+	trebleClef = pygame.image.load("treble clef.png")
+	trebleClef = pygame.transform.smoothscale(trebleClef, TREBLE_SIZE)
+	SCREEN.blit(trebleClef, pos)
+	
+	# draw left side vertical line
 	pygame.draw.line(SCREEN, BLACK, (LEFTX,TOPY), (LEFTX,BOTTOMY))
 
-	# right side vertical line
+	# draw right side vertical line
 	pygame.draw.line(SCREEN, BLACK, (RIGHTX,TOPY), (RIGHTX,BOTTOMY))
 		
-	# horizontal staff lines
+	# draw horizontal staff lines
 	for i in range(5):
-		y = TOPY+SPACING*i
+		y = TOPY+STAFF_SPACING*i
 		pygame.draw.line(SCREEN, BLACK, (LEFTX,y), (RIGHTX,y))
 		
 
-def printNote(staffPos, noteName, oct, notePosX):
+def drawNote(staffPos, noteName, oct, notePosX):
+	# draws a single note on the staff
+	# returns note position
 	# calculate x position
 	xPos = (staffPos[0]+10) + (WIDTH-(staffPos[0]+10)*2)/90 + (WIDTH-(staffPos[0]+10)*2)/30*(notePosX+2)
 	xPos = int(xPos)
 	
 	# calculate y position
-	NOTE_SPACING = (TREBLE_SIZE[1]-23)/8
-
+	# middle C is used as the reference position
 	middleCY = staffPos[1] + NOTE_SPACING*11
 
 	match noteName[0]:
@@ -320,9 +361,9 @@ def printNote(staffPos, noteName, oct, notePosX):
 		case _:
 			mult = -1
 		
-	yPos = int(middleCY - NOTE_SPACING*(mult + (oct-1)*8))
+	yPos = int(middleCY - NOTE_SPACING*(mult + (oct-1)*7))
 
-	# draw line through note if it qualifies
+	# draw line through note if it is above or below staff
 	if yPos > (staffPos[1] + NOTE_SPACING*10) or yPos < (staffPos[1] - NOTE_SPACING):
 		pygame.draw.line(SCREEN, BLACK, (xPos-9,yPos), (xPos+9,yPos))
 	
@@ -336,7 +377,7 @@ def printNote(staffPos, noteName, oct, notePosX):
 	FLAT_SIZE = (8,18)
 	try:
 		if noteName[1] == '#':
-			
+			# load and draw sharp symbol
 			sharp = pygame.image.load("sharp.png")
 			sharp = pygame.transform.smoothscale(sharp, SHARP_SIZE)
 			x = int(xPos + ACC_OFFSET - SHARP_SIZE[0]/2)
@@ -344,7 +385,7 @@ def printNote(staffPos, noteName, oct, notePosX):
 			SCREEN.blit(sharp, (x, y))
 		
 		elif noteName[1] == 'b':
-			
+			# load and draw flat symbol
 			flat = pygame.image.load("flat.png")
 			flat = pygame.transform.smoothscale(flat, FLAT_SIZE)
 			x = int(xPos + ACC_OFFSET - FLAT_SIZE[0]/2)
@@ -352,32 +393,72 @@ def printNote(staffPos, noteName, oct, notePosX):
 			SCREEN.blit(flat, (x,y))
 	except:
 		pass
+
+	return xPos, yPos
 		
+
+def drawScale(root, mod, steps, startingPos):
+	# draws a scale or chord
+	# determine whether to print sharps or flats
+	ind = allNotes.index(root)
+	if accidentals[ind] > 0:
+		sharpScale = True
+	else:
+		sharpScale = False
 	
-# mode = chooseMode()
-mode = 1
+	notePos = startingPos
+	for x in range(len(steps)+1):
+		# get note name
+		note = allNotes[ind%12]
+
+		# if sharpScale, change flat note to it's equivalent sharp note
+		if sharpScale and note.count('b') == 1:
+			note = allNotes[ind%12-1] + "#"
+
+		# find octave
+		if ind < 12:
+			oct = 1
+		else:
+			oct = 2
+
+		# draw the note
+		noteCoords = drawNote(STAFF_POS, note, oct, notePos)
+
+		# if note is first note in the scale, write the scale name the note
+		if x == 0:
+			printOnScreen(note+mod, (noteCoords[0] - 4, STAFF_POS[1] + NOTE_SPACING*11+5))
+		
+		notePos += 1
+		pygame.display.update()
+		
+		ind += steps[x%(len(steps))]
+
+	return notePos
+
+
+def printOnScreen(text, pos):
+	# print text to screen (not console)
+	toPrint = FONT.render(text, True, BLACK)
+	SCREEN.blit(toPrint, pos)
+	pygame.display.update()
+	
 # Program Start
+SCREEN.fill("white")
+drawStaff(STAFF_POS)
+pygame.display.update()
+# select mode when first run
+mode = chooseMode()
 while True:
 	for event in pygame.event.get():
 		if event.type == QUIT:
 			pygame.quit()
 			sys.exit()
-
-		if event.type == pygame.MOUSEBUTTONUP:
-			print(pygame.mouse.get_pos())
 			
-	SCREEN.fill("white")
-
-	
-	drawStaff((10,20))
-	printNote((10,20), "C#", 1, 0)
-	printNote((10,20), "Bb", 1, 1)
-	printNote((10,20), "D", 1, 2)
+		# for testing
+		# if event.type == pygame.MOUSEBUTTONDOWN:
+		# 	print(pygame.mouse.get_pos())
 		
-	pygame.display.update()
-		
-		
-	# if mode == 1:
-	# 	singleChordMode()
-	# else:
-	# 	progressionMode()
+	if mode == 1:
+		singleChordMode()
+	else:
+		progressionMode()
