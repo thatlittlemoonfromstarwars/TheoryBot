@@ -1,15 +1,19 @@
 import pygame, sys
+import pygame_textinput
 from pygame.locals import QUIT
 from pygame import gfxdraw
 
 # global constants
 WIDTH = 1000
-HEIGHT = 700
+HEIGHT = 200
 WINDOW_SIZE = (WIDTH, HEIGHT)
 TREBLE_SIZE = (70,70)
 NOTE_SPACING = (TREBLE_SIZE[1]-23)/8
 STAFF_POS = (10,20)
 BLACK = (0,0,0)
+
+# global variables
+notesOnStaff = []
 
 # setup for pygame
 pygame.init()
@@ -18,6 +22,11 @@ FONT = pygame.font.Font("Roboto/Roboto-Medium.ttf",15)
 SCREEN = pygame.display.set_mode(WINDOW_SIZE)
 pygame.display.set_caption('Theory Bot')
 # https://replit.com/talk/learn/Pygame-Tutorial/143782
+
+# for text input
+textinput = pygame_textinput.TextInputVisualizer()
+# https://github.com/Nearoo/pygame-text-input
+clock = pygame.time.Clock()
 
 allNotes = ["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"]
 accidentals = [0,-5,2,-3,4,-1,6,1,-4,3,-2,5]
@@ -49,7 +58,6 @@ dom9 = [4,3,3,4]
 sus2 = [2,5]
 sus4 = [5,2]
 aug = [4,4]
-
 
 def findRoot(userin):
 	# seperates user input into root note and modifier
@@ -203,7 +211,7 @@ def chooseMode():
 		print("----Modes----")
 		print("1. Single Chord or Scale")
 		print("2. Chord progression")
-		mode = int(input("Choose a mode:"))
+		mode = int(getUserIn("Choose a mode:"))
 		if mode == 1 or mode == 2:
 			return mode
 		else:
@@ -443,22 +451,45 @@ def printOnScreen(text, pos):
 	pygame.display.update()
 	
 # Program Start
-SCREEN.fill("white")
-drawStaff(STAFF_POS)
-pygame.display.update()
+
 # select mode when first run
-mode = chooseMode()
-while True:
-	for event in pygame.event.get():
-		if event.type == QUIT:
-			pygame.quit()
-			sys.exit()
-			
-		# for testing
-		# if event.type == pygame.MOUSEBUTTONDOWN:
-		# 	print(pygame.mouse.get_pos())
+# mode = chooseMode()
+
+def getUserIn(prompt):
+	while True:
+		SCREEN.fill("white")
+		drawStaff(STAFF_POS)
+		drawNotes()
 		
-	if mode == 1:
-		singleChordMode()
-	else:
-		progressionMode()
+		events = pygame.event.get()
+		# Feed it with events every frame
+		textinput.update(events)
+		# Blit its surface onto the screen
+		SCREEN.blit(textinput.surface, (20, HEIGHT-50))
+	
+		for event in events:
+			if event.type == QUIT:
+				pygame.quit()
+				sys.exit()
+	
+			if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+				return textinput.value
+				
+				textinput.value = ''
+			# for testing
+			# if event.type == pygame.MOUSEBUTTONDOWN:
+			# 	print(pygame.mouse.get_pos())
+	
+	
+		pygame.display.update()
+		clock.tick(30)
+	# 
+
+
+
+
+mode = chooseMode()
+if mode == 1:
+	singleChordMode()
+else:
+	progressionMode()
