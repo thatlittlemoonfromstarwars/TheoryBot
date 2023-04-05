@@ -95,7 +95,6 @@ def findRoot(userin):
 	else:
 		return userin[0].capitalize(), userin[1:]
 
-
 def printAccidentals(root):
 	# to print accidentals in a scale
 	acc = accidentals[allNotes.index(root)]
@@ -127,7 +126,6 @@ def printAccidentals(root):
 		else:
 			print(root, " has ", acc, " sharps. They are", sharps)
 			
-
 def printScale(root, steps):
 	# prints the note names of the notes in the scale
 	ind = allNotes.index(root)
@@ -170,8 +168,7 @@ def printMenu():
 	print("sus4 - Sus4")
 	print("aug - Augmented")
 	print()
-	
-	
+		
 def chooseType(mod):
 	# returns the corresponding step list, taking the
 	# modifier as input
@@ -223,7 +220,6 @@ def chooseType(mod):
 		case _:
 			return -1
 			
-
 def processSingleChord(userin):
 	# prints a single chord or scale
 	
@@ -287,7 +283,7 @@ def processChordProgression(userin):
 	
 	# add notes to notesOnStaff
 	tempNotePos = addScaleToStaff(root, mod, type, notePos)
-	if tempNotePos == -1:
+	if tempNotePos == -1: # prevents note overflow
 		return 2
 	notePos = tempNotePos
 	print(root+mod)
@@ -295,10 +291,48 @@ def processChordProgression(userin):
 	print()
 
 	return 0
+
+def addScaleToStaff(root, mod, steps, startingPos):
+	# adds a scale or chord to notesOnStaff
+
+	# determine whether to print sharps or flats
+	noteInd = allNotes.index(root)
+	if accidentals[noteInd] > 0:
+		sharpScale = True
+	else:
+		sharpScale = False
+	
+	notePos = startingPos
+	if startingPos + len(steps) + 1 > NOTES_PER_STAFF: # check for note overflow
+		return -1
+	for x in range(len(steps)+1):
+		# get note name
+		note = allNotes[noteInd%12]
+
+		# if sharpScale, change flat note to it's equivalent sharp note
+		if sharpScale and note.count('b') == 1:
+			note = allNotes[noteInd%12-1] + "#"
+
+		# find octave
+		if noteInd < 12:
+			oct = 1
+		else:
+			oct = 2
+
+		# add notes to notesOnStaff
+		if x == 0:
+			notesOnStaff[notePos] = (note, oct, note+mod)
+		else:
+			notesOnStaff[notePos] = (note, oct, None)
 		
+		notePos += 1
+		noteInd += steps[x%(len(steps))]
+
+	return notePos
 
 def drawStaff(pos):
 	# draws the staff
+
 	# staff dimensions
 	LEFTX = pos[0]+10
 	RIGHTX = WIDTH-(pos[0]+10)
@@ -320,10 +354,10 @@ def drawStaff(pos):
 		y = TOPY+STAFF_SPACING*i
 		pygame.draw.line(SCREEN, BLACK, (LEFTX,y), (RIGHTX,y))
 		
-
 def drawNote(noteName, oct, notePosX, text):
 	# draws a single note on the staff
 	# returns note position
+
 	# calculate x position
 	xPos = (STAFF_POS[0]+10) + NOTE_SPACING_X/3 + NOTE_SPACING_X*(notePosX+2)
 	xPos = int(xPos)
@@ -369,7 +403,7 @@ def drawNote(noteName, oct, notePosX, text):
 			SCREEN.blit(sharp, (x, y))
 		
 		elif noteName[1] == 'b':
-			# load and draw flat symbol
+			# draw flat symbol
 			x = int(xPos - ACC_OFFSET - FLAT_SIZE[0]/2)
 			y = int(yPos-FLAT_SIZE[1]/2) - 3
 			SCREEN.blit(flat, (x,y))
@@ -377,66 +411,26 @@ def drawNote(noteName, oct, notePosX, text):
 		pass
 	
 	if text != None:
-		# if note is first note in the scale, write the scale name under the note
+		# if note is first note in the chord, write the chord name under the note
 		printOnScreen(text, (xPos - 4, STAFF_POS[1] + NOTE_SPACING_Y*11+5))
 		if notePosX != 0:
-			# if note is not the first note, draw a bar line
+			# if note is not the first note on the staff, but the first note of a chord, draw a bar line
 			p1 = (xPos-NOTE_SPACING_X*3/5, STAFF_POS[1]+NOTE_SPACING_Y)
 			p2 = (xPos-NOTE_SPACING_X*3/5, STAFF_POS[1]+NOTE_SPACING_Y*9)
 			pygame.draw.line(SCREEN, BLACK, p1, p2)
 	
 	return xPos, yPos
 
-
 def drawNotes():
+	# draws all notes in notesOnStaff onto the staff
 	index = 0
 	while index < len(notesOnStaff):
 		if notesOnStaff[index] != None:
 			try:
-				drawNote(notesOnStaff[index][0],notesOnStaff[index][1],index,notesOnStaff[index][2])
+				drawNote(notesOnStaff[index][0], notesOnStaff[index][1], index, notesOnStaff[index][2])
 			except:
-				drawNote(notesOnStaff[index][0],notesOnStaff[index][1],index)
+				drawNote(notesOnStaff[index][0], notesOnStaff[index][1], index)
 		index += 1
-
-		
-def addScaleToStaff(root, mod, steps, startingPos):
-	# adds a scale or chord to notesOnStaff
-	# determine whether to print sharps or flats
-	ind = allNotes.index(root)
-	if accidentals[ind] > 0:
-		sharpScale = True
-	else:
-		sharpScale = False
-	
-	notePos = startingPos
-	if startingPos + len(steps) + 1 > NOTES_PER_STAFF:
-		return -1
-	for x in range(len(steps)+1):
-		# get note name
-		note = allNotes[ind%12]
-
-		# if sharpScale, change flat note to it's equivalent sharp note
-		if sharpScale and note.count('b') == 1:
-			note = allNotes[ind%12-1] + "#"
-
-		# find octave
-		if ind < 12:
-			oct = 1
-		else:
-			oct = 2
-
-		# add notes to notesOnStaff
-		if x == 0:
-			notesOnStaff[notePos] = (note, oct, note+mod)
-		else:
-			notesOnStaff[notePos] = (note, oct, None)
-		
-		notePos += 1
-		
-		ind += steps[x%(len(steps))]
-
-	return notePos
-
 
 def printOnScreen(text, pos):
 	# print text to screen (not console)
@@ -474,8 +468,8 @@ while True:
 				printError = processSingleChord(textinput.value)
 			else:
 				printError = processChordProgression(textinput.value)
-					
-			textinput.value = ''
+			if printError == 0:		
+				textinput.value = ''
 
 	# error menu
 	if printError == 1:
