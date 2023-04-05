@@ -70,6 +70,11 @@ sharp = pygame.image.load("sharp.png")
 sharp = pygame.transform.smoothscale(sharp, SHARP_SIZE)
 flat = pygame.image.load("flat.png")
 flat = pygame.transform.smoothscale(flat, FLAT_SIZE)
+# set caption
+if mode == 1:
+	pygame.display.set_caption('TheoryBot - Single Chord Mode')
+else:
+	pygame.display.set_caption('TheoryBot - Progression Mode')
 # https://replit.com/talk/learn/Pygame-Tutorial/143782
 
 # for text input
@@ -444,13 +449,10 @@ def printOnScreen(text, pos):
 # Program Start
 printError = 0
 while True:
+	# every frame:
 	SCREEN.fill("white")
 	drawStaff(STAFF_POS)
 	drawNotes()
-	if mode == 1:
-		pygame.display.set_caption('TheoryBot - Single Chord Mode')
-	else:
-		pygame.display.set_caption('TheoryBot - Progression Mode')
 	
 	events = pygame.event.get()
 	# Feed it with events every frame
