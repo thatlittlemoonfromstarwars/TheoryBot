@@ -4,15 +4,15 @@ from pygame.locals import QUIT
 from pygame import gfxdraw
 
 # global constants
-WIDTH = 1000
-HEIGHT = 200
+WIDTH = 1200
+HEIGHT = 500
 WINDOW_SIZE = (WIDTH, HEIGHT)
 TREBLE_SIZE = (70,70)
 ACC_OFFSET = 11
 SHARP_SIZE = (40,40)
 FLAT_SIZE = (8,18)
 STAFF_POS = (10,20)
-NOTES_PER_STAFF = 28
+NOTES_PER_STAFF = int(WIDTH/1000*28)
 NOTE_SPACING_Y = (TREBLE_SIZE[1]-23)/8
 NOTE_SPACING_X = (WIDTH-(STAFF_POS[0]+10)*2)/(NOTES_PER_STAFF+2)
 BLACK = (0,0,0)
@@ -59,7 +59,8 @@ aug = [4,4]
 pygame.init()
 clock = pygame.time.Clock()
 pygame.font.init()
-FONT = pygame.font.Font("Roboto/Roboto-Medium.ttf",15)
+SUBSCRIPT_FONT = pygame.font.Font("Roboto/Roboto-Medium.ttf", 15)
+INPUT_FONT = pygame.font.Font("Roboto/Roboto-Light.ttf", 25)
 SCREEN = pygame.display.set_mode(WINDOW_SIZE)
 # load treble clef
 trebleClef = pygame.image.load("treble clef.png")
@@ -73,6 +74,9 @@ flat = pygame.transform.smoothscale(flat, FLAT_SIZE)
 
 # for text input
 textinput = pygame_textinput.TextInputVisualizer()
+textinput.antialias = True
+textinput.font_object = INPUT_FONT
+textinput.cursor_width = 2
 # https://github.com/Nearoo/pygame-text-input
 
 def findRoot(userin):
@@ -434,7 +438,7 @@ def drawNotes():
 
 def printOnScreen(text, pos):
 	# print text to screen (not console)
-	toPrint = FONT.render(text, True, BLACK)
+	toPrint = SUBSCRIPT_FONT.render(text, True, BLACK)
 	SCREEN.blit(toPrint, pos)
 	
 # Program Start
