@@ -5,22 +5,25 @@ from pygame import gfxdraw
 
 # global constants
 WIDTH = 1200
-HEIGHT = 500
+HEIGHT = 690
 WINDOW_SIZE = (WIDTH, HEIGHT)
 TREBLE_SIZE = (70,70)
 ACC_OFFSET = 11
 SHARP_SIZE = (40,40)
 FLAT_SIZE = (8,18)
-STAFF_POS = (10,20)
+STAFF1_POS = (10,10)
+NUM_STAFFS = int((HEIGHT-40)/130)
 NOTES_PER_STAFF = int(WIDTH/1000*28)
 NOTE_SPACING_Y = (TREBLE_SIZE[1]-23)/8
-NOTE_SPACING_X = (WIDTH-(STAFF_POS[0]+10)*2)/(NOTES_PER_STAFF+2)
+NOTE_SPACING_X = (WIDTH-(STAFF1_POS[0]+10)*2)/(NOTES_PER_STAFF+2)
 BLACK = (0,0,0)
 
 # global variables
-notesOnStaff = [None] * NOTES_PER_STAFF	# represents all the notes added to the staff
-										# formatted: (noteName, octave, text)
-										# index represents xPos
+notesOnStaff = [None] * (NOTES_PER_STAFF * NUM_STAFFS)
+# represents all the notes added to the staff
+# formatted: (noteName, octave, text)
+# index represents xPos
+
 mode = 2 # set mode here - 1 is single chord mode, 2 is progression mode
 notePos = 0 # for progression mode
 
@@ -271,6 +274,9 @@ def processChordProgression(userin):
 		notesOnStaff = [None]*NOTES_PER_STAFF
 		notePos = 0
 		return 0
+	elif userin.lower() == "quit":
+		pygame.quit()
+		sys.exit()
 
 	root, mod = findRoot(userin)
 
@@ -310,10 +316,15 @@ def addScaleToStaff(root, mod, steps, startingPos):
 		sharpScale = True
 	else:
 		sharpScale = False
-	
+
+	staffNum = int(startingPos/NOTES_PER_STAFF) + 1
+	if startingPos + len(steps) + 1 > NOTES_PER_STAFF*staffNum: # check for note overflow
+		if staffNum+1 > NUM_STAFFS: # if on last staff return error
+			return -1
+		startingPos = staffNum*NOTES_PER_STAFF # if not on last
+		print(startingPos)
+
 	notePos = startingPos
-	if startingPos + len(steps) + 1 > NOTES_PER_STAFF: # check for note overflow
-		return -1
 	for x in range(len(steps)+1):
 		# get note name
 		note = allNotes[noteInd%12]
@@ -362,18 +373,24 @@ def drawStaff(pos):
 	for i in range(5):
 		y = TOPY+STAFF_SPACING*i
 		pygame.draw.line(SCREEN, BLACK, (LEFTX,y), (RIGHTX,y))
+
+def drawStaffs():
+	for x in range(NUM_STAFFS):
+		staffPos = (STAFF1_POS[0], STAFF1_POS[1]+130*x)
+		drawStaff(staffPos)
 		
-def drawNote(noteName, oct, notePosX, text):
+def drawNote(noteName, oct, notePosX, staff, text):
 	# draws a single note on the staff
 	# returns note position
-
+	staff_pos = (STAFF1_POS[0],	STAFF1_POS[1] + 130*(staff-1))
+		
 	# calculate x position
-	xPos = (STAFF_POS[0]+10) + NOTE_SPACING_X/3 + NOTE_SPACING_X*(notePosX+2)
+	xPos = (staff_pos[0]+10) + NOTE_SPACING_X/3 + NOTE_SPACING_X*(notePosX%NOTES_PER_STAFF+2)
 	xPos = int(xPos)
 	
 	# calculate y position
 	# middle C is used as the reference position
-	middleCY = STAFF_POS[1] + NOTE_SPACING_Y*11
+	middleCY = staff_pos[1] + NOTE_SPACING_Y*11
 
 	match noteName[0]:
 		case "C":
@@ -396,7 +413,7 @@ def drawNote(noteName, oct, notePosX, text):
 	yPos = int(middleCY - NOTE_SPACING_Y*(mult + (oct-1)*7))
 
 	# draw line through note if it is above or below staff
-	if yPos > (STAFF_POS[1] + NOTE_SPACING_Y*10) or yPos < (STAFF_POS[1] - NOTE_SPACING_Y):
+	if yPos > (staff_pos[1] + NOTE_SPACING_Y*10) or yPos < (staff_pos[1] - NOTE_SPACING_Y):
 		pygame.draw.line(SCREEN, BLACK, (xPos-9,yPos), (xPos+9,yPos))
 	
 	# draw note
@@ -421,11 +438,11 @@ def drawNote(noteName, oct, notePosX, text):
 	
 	if text != None:
 		# if note is first note in the chord, write the chord name under the note
-		printOnScreen(text, (xPos - 4, STAFF_POS[1] + NOTE_SPACING_Y*11+5))
-		if notePosX != 0:
+		printOnScreen(text, (xPos - 4, staff_pos[1] + NOTE_SPACING_Y*11+5))
+		if notePosX%NOTES_PER_STAFF != 0:
 			# if note is not the first note on the staff, but the first note of a chord, draw a bar line
-			p1 = (xPos-NOTE_SPACING_X*3/5, STAFF_POS[1]+NOTE_SPACING_Y)
-			p2 = (xPos-NOTE_SPACING_X*3/5, STAFF_POS[1]+NOTE_SPACING_Y*9)
+			p1 = (xPos-NOTE_SPACING_X*3/5, staff_pos[1]+NOTE_SPACING_Y)
+			p2 = (xPos-NOTE_SPACING_X*3/5, staff_pos[1]+NOTE_SPACING_Y*9)
 			pygame.draw.line(SCREEN, BLACK, p1, p2)
 	
 	return xPos, yPos
@@ -435,10 +452,11 @@ def drawNotes():
 	index = 0
 	while index < len(notesOnStaff):
 		if notesOnStaff[index] != None:
+			staffNum = int((index+1)/NOTES_PER_STAFF + 1)
 			try:
-				drawNote(notesOnStaff[index][0], notesOnStaff[index][1], index, notesOnStaff[index][2])
+				drawNote(notesOnStaff[index][0], notesOnStaff[index][1], index, staffNum, notesOnStaff[index][2])
 			except:
-				drawNote(notesOnStaff[index][0], notesOnStaff[index][1], index)
+				drawNote(notesOnStaff[index][0], notesOnStaff[index][1], index, staffNum)
 		index += 1
 
 def printOnScreen(text, pos):
@@ -451,7 +469,7 @@ printError = 0
 while True:
 	# every frame:
 	SCREEN.fill("white")
-	drawStaff(STAFF_POS)
+	drawStaffs()
 	drawNotes()
 	
 	events = pygame.event.get()
