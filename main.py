@@ -420,14 +420,18 @@ def drawNote(noteName, oct, notePosX, staff, text):
 			mult = -1
 		
 	yPos = int(middleCY - NOTE_SPACING_Y*(mult + (oct-1)*7))
-	
+
+	# correct for inconsistent spacing
+	if (noteName[0] == 'E' or noteName[0] == 'D') and oct == 1:
+		yPos += 1
+		
 	# draw note
 	gfxdraw.aacircle(SCREEN, xPos, yPos, 5, BLACK)
 	gfxdraw.filled_circle(SCREEN, xPos, yPos, 5, BLACK)
 	gfxdraw.filled_circle(SCREEN, xPos, yPos, 3, WHITE)
 
 	# draw line through note if it is above or below staff
-	if yPos > (staff_pos[1] + NOTE_SPACING_Y*10) or yPos < (staff_pos[1] - NOTE_SPACING_Y):
+	if yPos >= (staff_pos[1] + NOTE_SPACING_Y*10 + 1) or yPos < (staff_pos[1] - NOTE_SPACING_Y):
 		pygame.draw.line(SCREEN, BLACK, (xPos-9,yPos), (xPos+9,yPos))
 
 	# draw stem if stem mode is on
