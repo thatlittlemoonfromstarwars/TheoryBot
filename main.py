@@ -5,7 +5,7 @@ from pygame import gfxdraw
 
 # global constants
 WIDTH = 1200
-HEIGHT = 700
+HEIGHT = 500
 WINDOW_SIZE = (WIDTH, HEIGHT)
 TREBLE_SIZE = (70,70)
 ACC_OFFSET = 11
@@ -17,6 +17,7 @@ NOTES_PER_STAFF = int(WIDTH/1000*28)
 NOTE_SPACING_Y = (TREBLE_SIZE[1]-23)/8
 NOTE_SPACING_X = (WIDTH-(STAFF1_POS[0]+10)*2)/(NOTES_PER_STAFF+2)
 BLACK = (0,0,0)
+WHITE = (255,255,255)
 MODE = 2 # set mode here - 1 is single chord mode, 2 is progression mode
 STEM_LENGTH = NOTE_SPACING_Y * 5
 
@@ -419,14 +420,15 @@ def drawNote(noteName, oct, notePosX, staff, text):
 			mult = -1
 		
 	yPos = int(middleCY - NOTE_SPACING_Y*(mult + (oct-1)*7))
-
-	# draw line through note if it is above or below staff
-	if yPos > (staff_pos[1] + NOTE_SPACING_Y*10) or yPos < (staff_pos[1] - NOTE_SPACING_Y):
-		pygame.draw.line(SCREEN, BLACK, (xPos-9,yPos), (xPos+9,yPos))
 	
 	# draw note
 	gfxdraw.aacircle(SCREEN, xPos, yPos, 5, BLACK)
 	gfxdraw.filled_circle(SCREEN, xPos, yPos, 5, BLACK)
+	gfxdraw.filled_circle(SCREEN, xPos, yPos, 3, WHITE)
+
+	# draw line through note if it is above or below staff
+	if yPos > (staff_pos[1] + NOTE_SPACING_Y*10) or yPos < (staff_pos[1] - NOTE_SPACING_Y):
+		pygame.draw.line(SCREEN, BLACK, (xPos-9,yPos), (xPos+9,yPos))
 
 	# draw stem if stem mode is on
 	if toggleStems:
@@ -485,8 +487,9 @@ printError = 0
 while True:
 	# every frame:
 	SCREEN.fill("white")
-	drawStaffs()
 	drawNotes()
+	drawStaffs()
+	
 	
 	events = pygame.event.get()
 	# Feed it with events every frame
@@ -519,4 +522,4 @@ while True:
 		# staff overflow
 		printOnScreen("The staff is full or almost full. Type \"clear\" to reset it.", (20, HEIGHT-20))
 	pygame.display.update()
-	clock.tick(10)
+	clock.tick(30)
