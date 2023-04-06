@@ -8,7 +8,7 @@ WIDTH = 1200
 HEIGHT = 500
 WINDOW_SIZE = (WIDTH, HEIGHT)
 TREBLE_SIZE = (70,70)
-ACC_OFFSET = 11
+ACC_OFFSET_X = 11
 SHARP_SIZE = (40,40)
 FLAT_SIZE = (8,18)
 STAFF1_POS = (10,20)
@@ -28,6 +28,7 @@ notesOnStaff = [None] * (NOTES_PER_STAFF * NUM_STAFFS)
 # index represents xPos
 notePos = 0 # for progression mode
 toggleStems = False # determines whether stems are drawn onto notes
+toggleFilled = False
 
 allNotes = ["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"]
 accidentals = [0,-5,2,-3,4,-1,6,1,-4,3,-2,5]
@@ -221,6 +222,8 @@ def chooseType(mod):
 			return dom7
 		case "7":
 			return dom7
+		case "dom":
+			return dom7
 		case "dom9":
 			return dom9
 		case "9":
@@ -285,6 +288,10 @@ def processChordProgression(userin):
 		# toggle stems
 		global toggleStems
 		toggleStems = not toggleStems
+		return 0
+	elif userin.lower() == "fill":
+		global toggleFilled
+		toggleFilled = not toggleFilled
 		return 0
 
 	root, mod = findRoot(userin)
@@ -428,7 +435,10 @@ def drawNote(noteName, oct, notePosX, staff, text):
 	# draw note
 	gfxdraw.aacircle(SCREEN, xPos, yPos, 5, BLACK)
 	gfxdraw.filled_circle(SCREEN, xPos, yPos, 5, BLACK)
-	gfxdraw.filled_circle(SCREEN, xPos, yPos, 3, WHITE)
+
+	# draw second circle to "unfill" a note if filled mode is not on
+	if not toggleFilled:
+		gfxdraw.filled_circle(SCREEN, xPos, yPos, 3, WHITE)
 
 	# draw line through note if it is above or below staff
 	if yPos >= (staff_pos[1] + NOTE_SPACING_Y*10 + 1) or yPos < (staff_pos[1] - NOTE_SPACING_Y):
@@ -446,13 +456,13 @@ def drawNote(noteName, oct, notePosX, staff, text):
 	try:
 		if noteName[1] == '#':
 			# draw sharp symbol
-			x = int(xPos - ACC_OFFSET - SHARP_SIZE[0]/2)
+			x = int(xPos - ACC_OFFSET_X - SHARP_SIZE[0]/2)
 			y = int(yPos-SHARP_SIZE[1]/2)
 			SCREEN.blit(sharp, (x, y))
 		
 		elif noteName[1] == 'b':
 			# draw flat symbol
-			x = int(xPos - ACC_OFFSET - FLAT_SIZE[0]/2)
+			x = int(xPos - ACC_OFFSET_X - FLAT_SIZE[0]/2)
 			y = int(yPos-FLAT_SIZE[1]/2) - 3
 			SCREEN.blit(flat, (x,y))
 	except:
@@ -474,7 +484,7 @@ def drawNotes():
 	index = 0
 	while index < len(notesOnStaff):
 		if notesOnStaff[index] != None:
-			staffNum = int((index+1)/NOTES_PER_STAFF + 1)
+			staffNum = int((index)/NOTES_PER_STAFF + 1)
 			try:
 				drawNote(notesOnStaff[index][0], notesOnStaff[index][1], index, staffNum, notesOnStaff[index][2])
 			except:
