@@ -5,27 +5,28 @@ from pygame import gfxdraw
 
 # global constants
 WIDTH = 1200
-HEIGHT = 690
+HEIGHT = 700
 WINDOW_SIZE = (WIDTH, HEIGHT)
 TREBLE_SIZE = (70,70)
 ACC_OFFSET = 11
 SHARP_SIZE = (40,40)
 FLAT_SIZE = (8,18)
-STAFF1_POS = (10,10)
-NUM_STAFFS = int((HEIGHT-40)/130)
+STAFF1_POS = (10,20)
+NUM_STAFFS = int((HEIGHT-50)/130)
 NOTES_PER_STAFF = int(WIDTH/1000*28)
 NOTE_SPACING_Y = (TREBLE_SIZE[1]-23)/8
 NOTE_SPACING_X = (WIDTH-(STAFF1_POS[0]+10)*2)/(NOTES_PER_STAFF+2)
 BLACK = (0,0,0)
+MODE = 2 # set mode here - 1 is single chord mode, 2 is progression mode
+STEM_LENGTH = NOTE_SPACING_Y * 5
 
 # global variables
 notesOnStaff = [None] * (NOTES_PER_STAFF * NUM_STAFFS)
 # represents all the notes added to the staff
 # formatted: (noteName, octave, text)
 # index represents xPos
-
-mode = 2 # set mode here - 1 is single chord mode, 2 is progression mode
 notePos = 0 # for progression mode
+toggleStems = False # determines whether stems are drawn onto notes
 
 allNotes = ["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"]
 accidentals = [0,-5,2,-3,4,-1,6,1,-4,3,-2,5]
@@ -74,7 +75,7 @@ sharp = pygame.transform.smoothscale(sharp, SHARP_SIZE)
 flat = pygame.image.load("flat.png")
 flat = pygame.transform.smoothscale(flat, FLAT_SIZE)
 # set caption
-if mode == 1:
+if MODE == 1:
 	pygame.display.set_caption('TheoryBot - Single Chord Mode')
 else:
 	pygame.display.set_caption('TheoryBot - Progression Mode')
@@ -231,7 +232,7 @@ def chooseType(mod):
 			return aug
 		case _:
 			return -1
-			
+
 def processSingleChord(userin):
 	# prints a single chord or scale
 	
@@ -271,12 +272,19 @@ def processChordProgression(userin):
 	global notePos
 	# if user types clear, clear chords
 	if userin.lower() == "clear":
-		notesOnStaff = [None]*NOTES_PER_STAFF
+		notesOnStaff = [None]*NOTES_PER_STAFF*NUM_STAFFS
 		notePos = 0
 		return 0
 	elif userin.lower() == "quit":
 		pygame.quit()
 		sys.exit()
+	elif userin.lower() == "menu":
+		return 0
+	elif userin.lower() == "stem":
+		# toggle stems
+		global toggleStems
+		toggleStems = not toggleStems
+		return 0
 
 	root, mod = findRoot(userin)
 
@@ -420,6 +428,14 @@ def drawNote(noteName, oct, notePosX, staff, text):
 	gfxdraw.aacircle(SCREEN, xPos, yPos, 5, BLACK)
 	gfxdraw.filled_circle(SCREEN, xPos, yPos, 5, BLACK)
 
+	# draw stem if stem mode is on
+	if toggleStems:
+		if oct == 2 or (oct == 1 and noteName[0] == 'B'):
+			pygame.draw.line(SCREEN, BLACK, (xPos-5,yPos), (xPos-5,yPos+STEM_LENGTH), 1)
+		elif oct == 1:
+			pygame.draw.line(SCREEN, BLACK, (xPos+5,yPos), (xPos+5,yPos-STEM_LENGTH), 1)
+		
+
 	# draw accidental
 	try:
 		if noteName[1] == '#':
@@ -488,7 +504,7 @@ while True:
 			if textinput.value == '':
 				# if text is empty
 				printError = 1
-			elif mode == 1:
+			elif MODE == 1:
 				printError = processSingleChord(textinput.value)
 			else:
 				printError = processChordProgression(textinput.value)
@@ -503,4 +519,4 @@ while True:
 		# staff overflow
 		printOnScreen("The staff is full or almost full. Type \"clear\" to reset it.", (20, HEIGHT-20))
 	pygame.display.update()
-	clock.tick(30)
+	clock.tick(10)
